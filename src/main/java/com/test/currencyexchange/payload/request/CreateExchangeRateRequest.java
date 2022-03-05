@@ -5,7 +5,7 @@ import lombok.Getter;
 import javax.validation.constraints.NotNull;
 
 @Getter
-public class ExchangeRateRequest {
+public class CreateExchangeRateRequest {
     @NotNull(message = "The value to change is required")
     private Double value;
     @NotNull(message = "The source currency is required")

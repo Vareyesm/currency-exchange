@@ -1,7 +1,10 @@
 package com.test.currencyexchange.services;
 
+import com.test.currencyexchange.exceptions.CustomException;
+import com.test.currencyexchange.models.ExchangeRate;
 import com.test.currencyexchange.models.mappers.ExchangeRateMapper;
-import com.test.currencyexchange.payload.request.ExchangeRateRequest;
+import com.test.currencyexchange.payload.request.CreateExchangeRateRequest;
+import com.test.currencyexchange.payload.request.UpdateExchangeRateRequest;
 import com.test.currencyexchange.payload.response.common.ActionResult;
 import com.test.currencyexchange.repository.CurrencyRepository;
 import com.test.currencyexchange.repository.ExchangeRateRepository;
@@ -11,8 +14,10 @@ import org.springframework.stereotype.Service;
 import rx.Completable;
 import rx.Single;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class ExchangeRateServiceImpl implements ExchangeRateService {
@@ -23,19 +28,21 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     private CurrencyRepository currencyRepository;
 
     @Override
-    public Single<ActionResult<Object>> createExchangeRate(ExchangeRateRequest request) {
+    public Single<ActionResult<Object>> createExchangeRate(CreateExchangeRateRequest request) {
         ActionResult<Object> result = this.validateCreateExchangeRate(request);
         return Single.create(singleSubscriber -> {
             if (result.getErrors() == null) {
                 exchangeRateRepository.save(ExchangeRateMapper.toCreate(request));
                 result.setStatusCode(HttpStatus.CREATED.value());
                 result.setMessage("Exchange rate successfully saved");
-            }
-            singleSubscriber.onSuccess(result);
+                singleSubscriber.onSuccess(result);
+            } else
+                singleSubscriber.onError(new CustomException(result));
+
         });
     }
 
-    private ActionResult<Object> validateCreateExchangeRate(ExchangeRateRequest request) {
+    private ActionResult<Object> validateCreateExchangeRate(CreateExchangeRateRequest request) {
         ActionResult<Object> result = new ActionResult<>();
         Map<String, String> errors = new HashMap<>();
 
@@ -46,20 +53,40 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         if (!existsSourceCurrency || !existsDestinationCurrency || existsExchangeRate) {
             result.setStatusCode(HttpStatus.BAD_REQUEST.value());
             result.setMessage("An error occurred while saving the exchange rate");
-            result.setErrors(errors);
 
             if (existsExchangeRate)
                 errors.put("global", "There is already a registered exchange rate");
             else
                 errors.put("global", "Source or destination currency does not exist");
+
+            result.setErrors(errors);
         }
 
         return result;
     }
 
     @Override
-    public Completable updateExchangeRate(ExchangeRateRequest request) {
-        return null;
+    public Completable updateExchangeRate(UpdateExchangeRateRequest request) {
+        return Completable.create(completableSubscriber -> {
+            Optional<ExchangeRate> optionalExchangeRate = exchangeRateRepository.findById(request.getId());
+            ActionResult<Object> result = new ActionResult<>();
+            Map<String, String> errors = new HashMap<>();
+
+            if (optionalExchangeRate.isPresent()) {
+                ExchangeRate exchangeRate = optionalExchangeRate.get();
+                exchangeRate.setValue(request.getValue());
+                exchangeRate.setUpdateDate(new Date());
+                exchangeRateRepository.save(exchangeRate);
+                completableSubscriber.onCompleted();
+            }
+            else {
+                result.setStatusCode(HttpStatus.BAD_REQUEST.value());
+                result.setMessage("An error occurred while updating the exchange rate");
+                errors.put("global", "Exchange rate to update not found");
+                result.setErrors(errors);
+                completableSubscriber.onError(new CustomException(result));
+            }
+        });
     }
 
     @Override

@@ -1,6 +1,8 @@
 package com.test.currencyexchange.controllers;
 
-import com.test.currencyexchange.payload.request.ExchangeRateRequest;
+import com.test.currencyexchange.payload.request.CreateExchangeRateRequest;
+import com.test.currencyexchange.payload.request.UpdateExchangeRateRequest;
+import com.test.currencyexchange.payload.response.common.ActionResult;
 import com.test.currencyexchange.services.ExchangeRateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,9 +21,20 @@ public class ExchangeRateController {
     ExchangeRateService service;
 
     @PostMapping
-    public Single<ResponseEntity<Object>> addExchange(@Valid @RequestBody ExchangeRateRequest request) {
+    public Single<ResponseEntity<Object>> createExchangeRate(@Valid @RequestBody CreateExchangeRateRequest request) {
         return service.createExchangeRate(request)
                 .subscribeOn(Schedulers.io())
                 .map(response -> new ResponseEntity<>(response, HttpStatus.valueOf(response.getStatusCode())));
+    }
+
+    @PutMapping(value = "/{id}")
+    public Single<ResponseEntity<Object>> updateExchangeRate(@PathVariable(value = "id") Integer exchangeRateId,
+                                                             @RequestBody UpdateExchangeRateRequest request) {
+        request.setId(exchangeRateId);
+        ActionResult<Object> result = new ActionResult<>();
+        result.setMessage("Exchange rate successfully updated");
+        return service.updateExchangeRate(request)
+                .subscribeOn(Schedulers.io())
+                .toSingle(() -> ResponseEntity.ok(result));
     }
 }
