@@ -78,8 +78,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
                 exchangeRate.setUpdateDate(new Date());
                 exchangeRateRepository.save(exchangeRate);
                 completableSubscriber.onCompleted();
-            }
-            else {
+            } else {
                 result.setStatusCode(HttpStatus.BAD_REQUEST.value());
                 result.setMessage("An error occurred while updating the exchange rate");
                 errors.put("global", "Exchange rate to update not found");
@@ -90,7 +89,36 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     }
 
     @Override
-    public Single<Double> getExchangeRateValue() {
-        return null;
+    public Single<ActionResult<Object>> getExchangeRateValue(Integer sourceCurrencyId, Integer destinationCurrencyId) {
+        return Single.create(singleSubscriber -> {
+            ActionResult<Object> actionResult = validateGetExchangeRateValue(sourceCurrencyId, destinationCurrencyId);
+            if (actionResult.getErrors().isEmpty()) {
+                Optional<ExchangeRate> exchangeRate = exchangeRateRepository.findBySourceCurrencyIdAndDestinationCurrencyId(sourceCurrencyId, destinationCurrencyId);
+                actionResult.setStatusCode(HttpStatus.OK.value());
+
+                if (exchangeRate.isPresent()) {
+                    actionResult.setMessage("Exchange rate value found");
+                    actionResult.setResult(exchangeRate.get().getValue());
+                    singleSubscriber.onSuccess(actionResult);
+                } else {
+                    actionResult.setMessage("Exchange rate value not found");
+                    singleSubscriber.onSuccess(actionResult);
+                }
+            } else
+                singleSubscriber.onError(new CustomException(actionResult));
+        });
+    }
+
+    private ActionResult<Object> validateGetExchangeRateValue(Integer sourceCurrencyId, Integer destinationCurrencyId) {
+        ActionResult<Object> actionResult = new ActionResult<>();
+        Map<String, String> errors = new HashMap<>();
+        actionResult.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        actionResult.setMessage("Invalid data");
+        if (sourceCurrencyId == 0 )
+            errors.put("sourceCurrencyId", "The source currency is required");
+        if (destinationCurrencyId == 0 )
+            errors.put("destinationCurrencyId", "The destination currency is required");
+        actionResult.setErrors(errors);
+        return actionResult;
     }
 }

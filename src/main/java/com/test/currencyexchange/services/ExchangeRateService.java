@@ -9,5 +9,5 @@ import rx.Single;
 public interface ExchangeRateService {
     Single<ActionResult<Object>> createExchangeRate(CreateExchangeRateRequest request);
     Completable updateExchangeRate(UpdateExchangeRateRequest request);
-    Single<Double> getExchangeRateValue();
+    Single<ActionResult<Object>> getExchangeRateValue(Integer sourceCurrencyId, Integer destinationCurrencyId);
 }
