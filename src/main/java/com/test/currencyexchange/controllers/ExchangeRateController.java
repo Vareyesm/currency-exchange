@@ -1,5 +1,6 @@
 package com.test.currencyexchange.controllers;
 
+import com.test.currencyexchange.payload.request.ConvertCurrencyRequest;
 import com.test.currencyexchange.payload.request.CreateExchangeRateRequest;
 import com.test.currencyexchange.payload.request.UpdateExchangeRateRequest;
 import com.test.currencyexchange.payload.response.common.ActionResult;
@@ -48,6 +49,14 @@ public class ExchangeRateController {
     public Single<ResponseEntity<Object>> getExchangeRateValue(@RequestParam(defaultValue = "0") Integer sourceCurrencyId,
                                                                @RequestParam(defaultValue = "0") Integer destinationCurrencyId) {
         return service.getExchangeRateValue(sourceCurrencyId, destinationCurrencyId)
+                .subscribeOn(Schedulers.io())
+                .map(response -> new ResponseEntity<>(response, HttpStatus.valueOf(response.getStatusCode())));
+    }
+
+    @PostMapping("/convert")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    public Single<ResponseEntity<Object>> convertCurrency(@Valid @RequestBody ConvertCurrencyRequest request) {
+        return service.convertCurrency(request)
                 .subscribeOn(Schedulers.io())
                 .map(response -> new ResponseEntity<>(response, HttpStatus.valueOf(response.getStatusCode())));
     }

@@ -8,22 +8,32 @@ import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 @Entity
-@Table(name = "exchange_rate")
+@Table(name = "exchange_history")
 @Getter
 @Setter
-public class ExchangeRate {
+public class ExchangeHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @NotNull
+    private String username;
+
+    @NotNull
+    @Column(name = "exchange_rate_value")
+    private Double exchangeRateValue;
+
+    @NotNull
+    @Column(name = "input_value")
+    private Double inputValue;
+
+    @NotNull
+    @Column(name = "output_value")
+    private Double outputValue;
+
+    @NotNull
     @Column(name = "creation_date")
     private Date creationDate;
-
-    @Column(name = "update_date")
-    private Date updateDate;
-
-    private Double value;
 
     @ManyToOne
     @JoinColumn(name = "sorce_currency_id")
