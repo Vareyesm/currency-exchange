@@ -1,4 +1,4 @@
-package com.test.currencyexchange;
+package com.alfredo.currencyexchange;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

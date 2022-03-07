@@ -1,4 +1,4 @@
-package com.test.currencyexchange;
+package com.alfredo.currencyexchange;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
