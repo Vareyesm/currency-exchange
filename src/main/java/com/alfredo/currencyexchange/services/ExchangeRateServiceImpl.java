@@ -1,6 +1,7 @@
 package com.alfredo.currencyexchange.services;
 
 import com.alfredo.currencyexchange.exceptions.CustomException;
+import com.alfredo.currencyexchange.models.Currency;
 import com.alfredo.currencyexchange.models.ExchangeRate;
 import com.alfredo.currencyexchange.models.mappers.ExchangeRateMapper;
 import com.alfredo.currencyexchange.payload.request.ConvertCurrencyRequest;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import rx.Completable;
 import rx.Single;
 
+import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -96,16 +98,17 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
 
     @Override
     public Single<ActionResult<Object>> convertCurrency(ConvertCurrencyRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl)auth.getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        DecimalFormat decimalFormat = new DecimalFormat("###.###");
         return Single.create(singleSubscriber -> {
             ActionResult<Object> actionResult = validateIfSourceAndDestinationsCurrencyExists(request.getSourceCurrencyId(), request.getDestinationCurrencyId());
             if (actionResult.getErrors().isEmpty()) {
-                Double outputValue = request.getAmountConvert() / request.getExchangeRateValue();
+                Optional<Currency> destinationCurrency = currencyRepository.findById(request.getDestinationCurrencyId());
+                Double outputValue = request.getAmountConvert() * request.getExchangeRateValue();
                 exchangeHistoryRepository.save(ExchangeRateMapper.toHistory(request, outputValue, userDetails.getUsername()));
                 actionResult.setStatusCode(HttpStatus.OK.value());
                 actionResult.setMessage("Successful conversion");
-                actionResult.setResult(outputValue);
+                actionResult.setResult(destinationCurrency.get().getCode() + " " + decimalFormat.format(outputValue));
                 singleSubscriber.onSuccess(actionResult);
             } else
                 singleSubscriber.onError(new CustomException(actionResult));

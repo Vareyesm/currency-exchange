@@ -22,6 +22,10 @@ public class Currency {
     @Size(max = 20)
     private String name;
 
+    @NotBlank
+    @Size(max = 3)
+    private String code;
+
     @Size(max = 100)
     private String description;
 }
