@@ -1,23 +1,16 @@
 # Currency exchange
 API con spring boot realizado como reto técnico
 
-## Ejecutar aplicación
-* Instalar postgres
-* Crear la base de datos (`currency-exchange`)
-* Instalar java SDK (11)
-* Descargar maven y descomprimir
-* Ir a la carpeta donde se clonó el proyecto spring boot y ejecutar el comando: 
-`[ruta-base]\apache-maven-3.8.4\bin\mvn spring-boot:run`
-* Crear usuario (desde postman con el endpoint `/api/auth/signup`)
-* Generar token usando el endpoint `/api/auth/signin` y usarlo para consumir los demás web services
+## Correr API localmente
+* Instalar docker
+* Clonar repositorio e ir a la carpeta clonada
+* Crear imágen docker: `docker build -t currency-exchange .`
+* Ejecutar los contenedores: `docker-compose up -d`
+* Verificar que ambos contenedores estén corriendo ('currency-exchange' y 'postgres:14-alpine3.15'): `docker ps`
+* Ejecutar los seeders: `docker exec -it [CONTAINER ID] psql -U postgres -d currency-exchange-db -f /var/lib/postgresql/seeders/initial_data.sql`
+* _(Opcional)_ Ingresar a la base de datos: `docker exec -it [CONTAINER ID] psql currency-exchange-db postgres`
 
-## Desplegar aplicación
-### Despliegue manual
-* Ir a la carpeta donde se clonó el proyecto spring boot y ejecutar el comando:
-  `[ruta-base]\apache-maven-3.8.4\bin\mvn build`
-* Detener la aplicación en el servidor
-* Copiar el jar generado al servidor en el servidor
-* Iniciar la aplicación
+_NOTA_ Reemplazar [CONTAINER ID] por el ID del contener
 
 ### Despliegue automático
 En caso tener integrado con alguna herramienta de despliegue automático (por ejemplo jenkins) seguir el procedimiento
