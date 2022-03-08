@@ -1,0 +1,16 @@
+version: '3.7'
+services:
+  app:
+    image: currency-exchange
+    ports:
+      - "8080:8080"
+    depends_on:
+      - dbpostgresql
+  dbpostgresql:
+    image: postgres:14-alpine3.15
+    volumes:
+      - ./seeders:/var/lib/postgresql/seeders
+#      - ./database:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=currency-exchange-db
